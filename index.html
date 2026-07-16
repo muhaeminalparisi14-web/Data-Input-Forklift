@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Forklift</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">🚜 Log Pemakaian Forklift</h2>
+        
+        <form id="forkliftForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Operator</label>
+                <input type="text" name="operator" required placeholder="Contoh: Budi Santoso"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nomor/ID Forklift</label>
+                <select name="forklift_id" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base bg-white">
+                    <option value="">Pilih Forklift</option>
+                    <option value="FL-01">Forklift 01 (15 Ton)</option>
+                    <option value="FL-02">Forklift 02 (10 Ton)</option>
+                    <option value="FL-03">Forklift 03 (10 Ton)</option>
+                    <option value="FL-04">Forklift 04 (15 Ton)</option>
+                    <option value="FL-05">Forklift 05 (10 Ton)</option>
+                    <option value="FL-06">Forklift 06 (15 Ton)</option>
+                    <option value="FL-07">Forklift 07 (05 Ton)</option>
+                    <option value="FL-08">Forklift 08 (10 Ton)</option>
+                    <option value="FL-09">Forklift 09 (15 Ton)</option>
+                    <option value="FL-10">Forklift 10 (15 Ton)</option>
+                    <option value="FL-11">Forklift 11 (15 Ton)</option>
+                    <option value="FL-12">Forklift 12 (15 Ton)</option>
+                    <option value="FL-13">Forklift 13 (15 Ton)</option>
+                    <option value="FL-14">Forklift 14 (15 Ton)</option>
+                    <option value="FL-20">Forklift 20 (23 Ton)</option>
+                    <option value="FL-23">Forklift 23 (23 Ton)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">HM Awal (Jam)</label>
+                    <input type="number" step="0.1" name="hm_awal" required placeholder="0.0"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">HM Akhir (Jam)</label>
+                    <input type="number" step="0.1" name="hm_akhir" required placeholder="0.0"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan / Aktivitas</label>
+                <textarea name="keterangan" rows="2" placeholder="Contoh: Loading barang di Blok B"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 text-base shadow-sm mt-2">
+                Simpan Data
+            </button>
+        </form>
+
+        <div id="statusMessage" class="hidden mt-4 p-3 rounded-lg text-center text-sm font-medium"></div>
+    </div>
+
+    <script>
+        // GANTI URL INI dengan URL Web App dari Google Apps Script Anda nanti
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVcboFOYzhWehkHb_Uwl3A8nKk9up5MKAimN0pQQxAk0K22x5leAvtgxb0jdBorMQx0Q/exec";
+
+        const form = document.getElementById('forkliftForm');
+        const btn = document.getElementById('submitBtn');
+        const msg = document.getElementById('statusMessage');
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            
+            // Validasi Logika HM
+            const hmAwal = parseFloat(form.hm_awal.value);
+            const hmAkhir = parseFloat(form.hm_akhir.value);
+            if (hmAkhir < hmAwal) {
+                showStatus('HM Akhir tidak boleh lebih kecil dari HM Awal!', 'bg-red-100 text-red-700');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Menyimpan...';
+            showStatus('Sedang mengirim data...', 'bg-blue-100 text-blue-700');
+
+            // Ambil data form
+            const formData = new FormData(form);
+            
+            // Kirim ke Google Sheets
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+                .then(response => {
+                    showStatus('✅ Data berhasil disimpan!', 'bg-green-100 text-green-700');
+                    form.reset();
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                    showStatus('❌ Gagal menyimpan data. Coba lagi.', 'bg-red-100 text-red-700');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerText = 'Simpan Data';
+                });
+        });
+
+        function showStatus(text, classes) {
+            msg.className = `mt-4 p-3 rounded-lg text-center text-sm font-medium ${classes}`;
+            msg.innerText = text;
+            msg.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
